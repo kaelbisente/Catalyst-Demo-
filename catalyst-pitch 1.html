@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CATALYST — Pitch</title>
+<style>
+:root {
+  --red: #D71920;
+  --red-soft: rgba(215,25,32,.18);
+  --red-glow: rgba(215,25,32,.45);
+  --bg: #0a0a0a;
+  --bg-card: #14141a;
+  --bg-card-2: #1c1c24;
+  --line: #2a2a35;
+  --fg: #f6f6f8;
+  --fg-dim: #8a8a96;
+  --fg-dimmer: #4a4a55;
+  --good: #34d399;
+  --warn: #fbbf24;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; width: 100%; overflow: hidden; }
+body {
+  font-family: 'Aptos', 'Aptos Display', 'Inter', 'Segoe UI', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  cursor: pointer;
+}
+
+/* Ambient */
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 110%, var(--red-glow), transparent 55%),
+    radial-gradient(circle at 10% 10%, rgba(255,255,255,.04), transparent 30%);
+  opacity: .55;
+  animation: pulse 8s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: .35; }
+  50%      { opacity: .65; }
+}
+
+/* Section label */
+.section-label {
+  position: fixed; top: 2.2rem; left: 3rem;
+  font-size: .68rem; letter-spacing: .35em; text-transform: uppercase;
+  color: var(--red); font-weight: 700;
+  opacity: 0; transition: opacity .6s ease;
+}
+.section-label::before { content: '— '; color: var(--fg-dimmer); }
+.section-label.active { opacity: 1; }
+
+/* Stage */
+.stage {
+  width: 88%; max-width: 1200px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  height: 72vh;
+  overflow: hidden;   /* keep transitioning slides contained */
+}
+.beat {
+  position: absolute; top: 50%; left: 50%;
+  width: 100%;
+  max-height: 100%;
+  opacity: 0;
+  transition: opacity .4s ease, transform .55s cubic-bezier(.2,.7,.3,1);
+  pointer-events: none;
+  text-align: center;
+}
+/* Entry transforms — pick one via the .anim-* class */
+.beat.anim-fade-up        { transform: translate(-50%, -50%) translateY(30px); }
+.beat.anim-fade-up.active { transform: translate(-50%, -50%) translateY(0); }
+.beat.anim-slide-up        { transform: translate(-50%, -50%) translateY(55px); }
+.beat.anim-slide-up.active { transform: translate(-50%, -50%) translateY(0); }
+.beat.anim-slide-down        { transform: translate(-50%, -50%) translateY(-55px); }
+.beat.anim-slide-down.active { transform: translate(-50%, -50%) translateY(0); }
+.beat.anim-slide-left        { transform: translate(-50%, -50%) translateX(80px); }
+.beat.anim-slide-left.active { transform: translate(-50%, -50%) translateX(0); }
+.beat.anim-slide-right        { transform: translate(-50%, -50%) translateX(-80px); }
+.beat.anim-slide-right.active { transform: translate(-50%, -50%) translateX(0); }
+.beat.anim-zoom-in        { transform: translate(-50%, -50%) scale(.7); }
+.beat.anim-zoom-in.active { transform: translate(-50%, -50%) scale(1); }
+.beat.anim-zoom-out        { transform: translate(-50%, -50%) scale(1.25); }
+.beat.anim-zoom-out.active { transform: translate(-50%, -50%) scale(1); }
+.beat.anim-punch        { transform: translate(-50%, -50%) scale(.5); }
+.beat.anim-punch.active { transform: translate(-50%, -50%) scale(1); }
+.beat.anim-punch.active { animation: punchBounce .7s cubic-bezier(.34,1.56,.64,1); }
+@keyframes punchBounce {
+  0%   { transform: translate(-50%, -50%) scale(.5); }
+  60%  { transform: translate(-50%, -50%) scale(1.08); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+.beat.active { opacity: 1; pointer-events: auto; }
+
+/* Exit — reverse direction (faster than entry to prevent overlap) */
+.beat.exiting               { opacity: 0; transition-duration: .35s; }
+.beat.exiting.anim-fade-up    { transform: translate(-50%, -50%) translateY(-30px); }
+.beat.exiting.anim-slide-up   { transform: translate(-50%, -50%) translateY(-55px); }
+.beat.exiting.anim-slide-down { transform: translate(-50%, -50%) translateY(55px); }
+.beat.exiting.anim-slide-left { transform: translate(-50%, -50%) translateX(-80px); }
+.beat.exiting.anim-slide-right{ transform: translate(-50%, -50%) translateX(80px); }
+.beat.exiting.anim-zoom-in    { transform: translate(-50%, -50%) scale(1.15); }
+.beat.exiting.anim-zoom-out   { transform: translate(-50%, -50%) scale(.85); }
+.beat.exiting.anim-punch      { transform: translate(-50%, -50%) scale(1.3); }
+
+/* Type scale */
+.beat .text-xs   { font-size: .85rem; color: var(--fg-dim); letter-spacing: .15em; text-transform: uppercase; }
+.beat .text-sm   { font-size: 1.3rem; color: #d8d8e0; line-height: 1.45; }
+.beat .text-md   { font-size: 1.9rem; line-height: 1.35; font-weight: 400; }
+.beat .text-lg   { font-size: 2.8rem; line-height: 1.18; font-weight: 700; letter-spacing: -.018em; }
+.beat .text-xl   { font-size: 4.5rem; line-height: 1.05; font-weight: 800; letter-spacing: -.035em; }
+.beat .text-mega { font-size: 7.5rem; line-height: 1;    font-weight: 900; letter-spacing: -.045em; }
+.beat .accent { color: var(--red); }
+.beat .muted  { color: var(--fg-dim); }
+.beat .dim    { color: var(--fg-dimmer); }
+.beat .strike { text-decoration: line-through; color: var(--fg-dim); }
+.beat .stack > * + * { margin-top: .9rem; }
+
+/* Layout helpers */
+.row   { display: flex; align-items: center; justify-content: center; gap: 2rem; flex-wrap: wrap; }
+.cols  { display: grid; gap: 1.2rem; }
+.cols.c2 { grid-template-columns: 1fr 1fr; }
+.cols.c3 { grid-template-columns: repeat(3, 1fr); }
+.cols.c4 { grid-template-columns: repeat(4, 1fr); }
+.gap-sm { gap: .8rem; }
+.gap-lg { gap: 2.5rem; }
+.mt-md  { margin-top: 1.4rem; }
+.mt-lg  { margin-top: 2.2rem; }
+
+/* ── Widgets ─────────────────────────────────────────────────────── */
+
+/* Card */
+.card {
+  background: var(--bg-card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 1.1rem 1.2rem; text-align: left; position: relative;
+}
+.card .label { font-size: .65rem; letter-spacing: .2em; text-transform: uppercase; color: var(--fg-dim); }
+.card .value { font-size: 2rem; font-weight: 800; margin-top: .35rem; letter-spacing: -.02em; }
+.card .meta  { font-size: .8rem; color: var(--fg-dim); margin-top: .35rem; }
+.card.glow { box-shadow: 0 0 0 1px var(--red), 0 0 30px var(--red-soft); }
+.card.tinted { background: linear-gradient(180deg, var(--bg-card), var(--bg-card-2)); }
+
+/* Pill / chip */
+.pill {
+  display: inline-flex; align-items: center; gap: .45rem;
+  padding: .45rem .85rem; border-radius: 999px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--line);
+  font-size: .85rem; color: var(--fg);
+}
+.pill .dot { width: .5rem; height: .5rem; border-radius: 50%; background: var(--fg-dim); }
+.pill.red    { border-color: var(--red); color: var(--red); }
+.pill.red .dot { background: var(--red); }
+.pill.good   { border-color: var(--good); color: var(--good); }
+.pill.good .dot { background: var(--good); }
+
+/* Phone pulse */
+.phone-pulse {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 6rem; height: 6rem; border-radius: 50%;
+  background: var(--bg-card); border: 1px solid var(--line);
+  position: relative;
+}
+.phone-pulse::before, .phone-pulse::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  border: 2px solid var(--red); opacity: 0;
+  animation: phonePulse 2.2s ease-out infinite;
+}
+.phone-pulse::after { animation-delay: 1.1s; }
+@keyframes phonePulse {
+  0%   { opacity: .7; transform: scale(1); }
+  100% { opacity: 0;  transform: scale(2.2); }
+}
+.phone-pulse svg { width: 2.4rem; height: 2.4rem; color: var(--red); }
+
+/* Serial typing */
+.serial-display {
+  display: inline-block;
+  font-family: 'Aptos Mono', 'Consolas', 'SF Mono', monospace;
+  background: var(--bg-card); border: 1px solid var(--line);
+  padding: 1rem 1.6rem; border-radius: 8px;
+  font-size: 1.6rem; letter-spacing: .12em; color: var(--fg);
+  white-space: nowrap;
+}
+.serial-display .cursor {
+  display: inline-block; width: .55em; height: 1em;
+  background: var(--red); vertical-align: -10%;
+  animation: blink 1s steps(2) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* Process flow */
+.flow {
+  display: flex; align-items: center; justify-content: center; gap: .8rem;
+  flex-wrap: wrap;
+}
+.flow .step {
+  padding: .7rem 1.1rem;
+  border: 1px solid var(--line); border-radius: 8px;
+  font-size: .92rem; color: var(--fg);
+  background: var(--bg-card); white-space: nowrap;
+}
+.flow .step.bad   { color: var(--red);  border-color: var(--red); }
+.flow .step.good  { color: var(--good); border-color: var(--good); }
+.flow .arrow { color: var(--red); font-size: 1.2rem; }
+
+/* X marks */
+.miss-grid { display: flex; gap: 1.2rem; justify-content: center; }
+.miss-grid .miss {
+  display: flex; flex-direction: column; align-items: center; gap: .5rem;
+  padding: 1rem 1.3rem;
+  border: 1px dashed var(--red); border-radius: 10px;
+  background: var(--red-soft); color: var(--red);
+}
+.miss .x {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2.4rem; height: 2.4rem; border-radius: 50%;
+  background: var(--red); color: white; font-weight: 900;
+}
+.miss .lbl { font-size: .85rem; letter-spacing: .05em; }
+
+/* Inconsistency bars */
+.bars { display: flex; align-items: flex-end; gap: .55rem; height: 8rem; justify-content: center; }
+.bars .bar {
+  width: 1.4rem; background: linear-gradient(180deg, var(--red), #6e0d12);
+  border-radius: 3px 3px 0 0;
+  animation: barRise 1.4s cubic-bezier(.3,.7,.4,1) backwards;
+}
+@keyframes barRise { from { height: 0 !important; opacity: 0; } }
+
+/* Sidebar mockup */
+.browser-mock {
+  display: flex; align-items: stretch; gap: 0;
+  border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+  background: var(--bg-card); max-width: 720px; margin: 0 auto;
+  text-align: left;
+}
+.browser-mock .main {
+  flex: 1; padding: 1.2rem; min-height: 12rem;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.03) 0%, rgba(255,255,255,.01) 100%);
+  border-right: 1px solid var(--line);
+}
+.browser-mock .main .url {
+  background: rgba(255,255,255,.06); padding: .35rem .6rem; border-radius: 5px;
+  font-family: monospace; font-size: .75rem; color: var(--fg-dim); margin-bottom: .8rem;
+}
+.browser-mock .main .skel {
+  height: .55rem; background: var(--line); border-radius: 4px;
+}
+.browser-mock .main .skel + .skel { margin-top: .5rem; }
+.browser-mock .main .skel.short { width: 60%; }
+.browser-mock .side {
+  width: 220px; padding: 1rem;
+  background: linear-gradient(180deg, #18181f 0%, #14141a 100%);
+}
+.browser-mock .side .hdr {
+  font-size: .72rem; letter-spacing: .25em; color: var(--red); font-weight: 700;
+  text-transform: uppercase; margin-bottom: .9rem;
+  display: flex; align-items: center; gap: .4rem;
+}
+.browser-mock .side .hdr .led {
+  width: .5rem; height: .5rem; border-radius: 50%; background: var(--red);
+  box-shadow: 0 0 8px var(--red);
+  animation: blink 1.6s ease-in-out infinite;
+}
+.browser-mock .side .row {
+  display: flex; justify-content: space-between; padding: .4rem 0;
+  font-size: .78rem; color: var(--fg); border-bottom: 1px solid var(--line);
+}
+.browser-mock .side .row .v { color: var(--fg-dim); }
+.browser-mock .side .row.alert .v { color: var(--red); font-weight: 700; }
+.browser-mock .side .cta {
+  margin-top: .9rem; padding: .6rem; background: var(--red);
+  color: white; text-align: center; border-radius: 6px;
+  font-size: .8rem; font-weight: 700; letter-spacing: .05em;
+}
+
+/* Decode flow (NATO → serial → product) */
+.decode {
+  display: flex; align-items: center; justify-content: center; gap: 1.2rem;
+  flex-wrap: wrap;
+}
+.decode .box {
+  padding: 1rem 1.3rem; border-radius: 10px;
+  background: var(--bg-card); border: 1px solid var(--line);
+  min-width: 12rem;
+}
+.decode .box .l { font-size: .65rem; letter-spacing: .2em; text-transform: uppercase; color: var(--fg-dim); }
+.decode .box .v { font-family: monospace; font-size: 1.1rem; margin-top: .4rem; color: var(--fg); }
+.decode .box.product { border-color: var(--red); }
+.decode .box.product .v { color: var(--red); font-family: inherit; font-weight: 700; }
+.decode .arrow { color: var(--red); font-size: 1.4rem; }
+
+/* Offer card */
+.offer-card {
+  max-width: 520px; margin: 0 auto;
+  border: 1px solid var(--red); border-radius: 14px;
+  background: linear-gradient(180deg, #1c0b0e, #14141a);
+  padding: 1.4rem 1.6rem; text-align: left;
+  box-shadow: 0 0 40px var(--red-soft);
+}
+.offer-card .hdr { display: flex; justify-content: space-between; align-items: center; }
+.offer-card .product { font-size: 1.1rem; font-weight: 700; }
+.offer-card .badge {
+  background: var(--red); color: white; padding: .2rem .55rem;
+  font-size: .65rem; border-radius: 4px; letter-spacing: .1em;
+}
+.offer-card .price {
+  font-size: 2.6rem; font-weight: 800; margin-top: .6rem;
+  letter-spacing: -.02em;
+}
+.offer-card .price .old { font-size: 1rem; color: var(--fg-dim); text-decoration: line-through; margin-left: .6rem; vertical-align: middle; }
+.offer-card .meta { display: flex; gap: .6rem; margin-top: .9rem; flex-wrap: wrap; }
+
+/* Radar (concentric pulse) */
+.radar {
+  width: 9rem; height: 9rem; position: relative;
+  display: inline-flex; align-items: center; justify-content: center; margin: 0 auto;
+}
+.radar .core {
+  width: 2rem; height: 2rem; border-radius: 50%;
+  background: var(--red); box-shadow: 0 0 20px var(--red);
+}
+.radar .ring {
+  position: absolute; inset: 0; border-radius: 50%;
+  border: 2px solid var(--red); opacity: 0;
+  animation: radarPing 2s ease-out infinite;
+}
+.radar .ring:nth-child(2) { animation-delay: .5s; }
+.radar .ring:nth-child(3) { animation-delay: 1s; }
+.radar .ring:nth-child(4) { animation-delay: 1.5s; }
+@keyframes radarPing {
+  0%   { opacity: .9; transform: scale(.4); }
+  100% { opacity: 0;  transform: scale(1.4); }
+}
+
+/* Sentiment gauge */
+.sentiment {
+  display: flex; align-items: center; gap: .6rem;
+  padding: .55rem .9rem; border-radius: 999px;
+  background: rgba(52, 211, 153, .12);
+  border: 1px solid var(--good); color: var(--good);
+  font-size: .9rem;
+}
+.sentiment .face { font-size: 1.2rem; }
+
+/* Big counter */
+.counter {
+  font-size: 8rem; font-weight: 900; line-height: 1;
+  letter-spacing: -.045em;
+}
+.counter.accent { color: var(--red); }
+
+/* Target progress */
+.target-bar {
+  position: relative; height: 1.6rem; background: var(--bg-card);
+  border-radius: 999px; max-width: 640px; margin: 1rem auto 0;
+  overflow: hidden; border: 1px solid var(--line);
+}
+.target-bar .fill {
+  position: absolute; top: 0; left: 0; height: 100%;
+  background: linear-gradient(90deg, var(--red), #ff5560);
+  width: 0; transition: width 1.4s cubic-bezier(.3,.7,.4,1);
+}
+.target-bar .target {
+  position: absolute; top: -.4rem; bottom: -.4rem;
+  width: 2px; background: white; opacity: .6;
+  left: 20%;
+}
+.target-bar .target::after {
+  content: '20% target';
+  position: absolute; top: -1.5rem; left: 50%; transform: translateX(-50%);
+  font-size: .65rem; letter-spacing: .15em; text-transform: uppercase; color: var(--fg-dim);
+  white-space: nowrap;
+}
+
+/* Video stage (end demo) */
+.video-stage {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; max-width: 1100px; margin: 0 auto;
+}
+.video-stage video {
+  width: 100%; max-height: 70vh;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  box-shadow: 0 20px 80px rgba(215,25,32,.25), 0 0 60px rgba(0,0,0,.6);
+  background: #000;
+}
+.video-caption {
+  margin-top: 1rem;
+  font-size: .8rem; letter-spacing: .25em; text-transform: uppercase;
+  color: var(--fg-dim); text-align: center;
+}
+
+/* Logo treatment */
+.logo-mark {
+  font-size: 8rem; font-weight: 900; letter-spacing: -.05em;
+  background: linear-gradient(135deg, #fff 0%, var(--red) 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.logo-mark .dot { -webkit-text-fill-color: var(--red); color: var(--red); }
+
+/* People row (engineers) */
+.people {
+  display: flex; gap: -.6rem; justify-content: center;
+}
+.people .av {
+  width: 3.2rem; height: 3.2rem; border-radius: 50%;
+  background: linear-gradient(135deg, #2a2a35, #14141a);
+  border: 2px solid var(--bg); display: inline-flex;
+  align-items: center; justify-content: center; font-weight: 700;
+  color: var(--fg); margin-left: -.7rem;
+}
+.people .av:first-child { margin-left: 0; }
+.people .av.red { background: linear-gradient(135deg, var(--red), #6e0d12); }
+
+/* Check badges */
+.check-grid { display: flex; gap: 1.2rem; justify-content: center; flex-wrap: wrap; }
+.check-grid .check {
+  display: inline-flex; align-items: center; gap: .6rem;
+  padding: .8rem 1.3rem; border-radius: 10px;
+  background: var(--bg-card); border: 1px solid var(--good);
+  color: var(--good); font-weight: 600;
+}
+.check-grid .check::before {
+  content: '✓'; display: inline-flex; width: 1.4rem; height: 1.4rem;
+  background: var(--good); color: var(--bg); border-radius: 50%;
+  align-items: center; justify-content: center; font-weight: 900;
+}
+
+/* ── HUD ─────────────────────────────────────────────────────────── */
+.hud {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  display: flex; align-items: center; gap: 1.2rem;
+  padding: 1.2rem 2.5rem;
+  font-size: .68rem; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--fg-dim); z-index: 20;
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,.6));
+}
+.beat-dots { display: flex; gap: .35rem; flex: 1; flex-wrap: wrap; }
+.beat-dots .dot {
+  width: .55rem; height: .55rem; border-radius: 50%;
+  background: var(--fg-dimmer); transition: background .3s, transform .3s;
+}
+.beat-dots .dot.done   { background: var(--red); }
+.beat-dots .dot.active { background: var(--red); transform: scale(1.6); box-shadow: 0 0 8px var(--red); }
+.counter-text { font-variant-numeric: tabular-nums; min-width: 4rem; text-align: right; }
+.controls { display: flex; gap: .6rem; align-items: center; }
+.controls button {
+  background: transparent; color: var(--fg-dim); border: 1px solid var(--fg-dimmer);
+  padding: .45rem .85rem; font-size: .68rem; cursor: pointer;
+  letter-spacing: .12em; text-transform: uppercase;
+  border-radius: 4px; font-family: inherit;
+}
+.controls button:hover { color: var(--fg); border-color: var(--fg); }
+.controls button.active { color: var(--red); border-color: var(--red); }
+
+/* Overlays */
+.start-overlay, .done-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.92);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 100; transition: opacity .6s ease;
+}
+.start-overlay.hidden { opacity: 0; pointer-events: none; }
+.start-overlay .brand-row {
+  display: flex; align-items: center; justify-content: center; gap: 2rem;
+  margin-bottom: 1rem;
+}
+.start-overlay .trendlife-logo {
+  width: 7rem; height: 7rem;
+  filter: drop-shadow(0 0 30px var(--red-glow));
+  animation: logoFloat 4s ease-in-out infinite;
+}
+.start-overlay .trendlife-logo path { fill: var(--red); }
+.start-overlay .catalyst-logo {
+  width: 7.5rem; height: 7.5rem;
+  filter: drop-shadow(0 0 40px var(--red-glow));
+  /* HD rendering — keep icon crisp at any DPI */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: high-quality;
+  -ms-interpolation-mode: bicubic;
+  object-fit: contain;
+  border-radius: 18%; /* subtle app-icon look if the source has square edges */
+  animation: logoFloat 4s ease-in-out infinite reverse;
+}
+.start-overlay .divider {
+  width: 2px; height: 5rem; background: var(--fg-dimmer);
+  border-radius: 1px;
+}
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+.start-overlay h1 { font-size: 7rem; font-weight: 900; letter-spacing: -.05em; }
+.start-overlay h1 .dot { color: var(--red); }
+.start-overlay .sub {
+  margin-top: 1rem; color: var(--fg-dim); letter-spacing: .3em;
+  text-transform: uppercase; font-size: .85rem;
+}
+.start-overlay .play-btn {
+  margin-top: 3.5rem; padding: 1.1rem 3rem;
+  background: var(--red); color: white; border: 0;
+  font-size: 1rem; font-weight: 700; letter-spacing: .25em;
+  text-transform: uppercase; cursor: pointer; border-radius: 4px;
+  font-family: inherit;
+  box-shadow: 0 8px 30px var(--red-glow);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.start-overlay .play-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px var(--red-glow); }
+.start-overlay .hint { margin-top: 1.5rem; font-size: .72rem; color: var(--fg-dimmer); letter-spacing: .15em; }
+.done-overlay { opacity: 0; pointer-events: none; }
+.done-overlay.visible { opacity: 1; pointer-events: auto; }
+.done-overlay .replay-btn {
+  margin-top: 2rem; padding: .9rem 2.5rem;
+  background: transparent; color: white; border: 1px solid white;
+  font-size: .82rem; letter-spacing: .25em; text-transform: uppercase;
+  cursor: pointer; border-radius: 4px; font-family: inherit;
+}
+.done-overlay .replay-btn:hover { background: white; color: black; }
+</style>
+</head>
+<body>
+
+<!-- Background music (looped, 25% volume). preload="auto" so it's ready when user clicks PLAY -->
+<audio id="bgm" src="TrendLifes There For You (Pop duet).mp4" loop preload="auto"></audio>
+
+<div class="start-overlay" id="start">
+  <div class="brand-row">
+    <!-- TrendLife icon (white→red glow) -->
+    <svg class="trendlife-logo" viewBox="0 0 133.91 122.64" xmlns="http://www.w3.org/2000/svg" aria-label="TrendLife">
+      <path d="M132.07,30.67c-1.84-7.9-5.5-15.32-11.17-21.12-25.65-26.27-60.08,6.57-68.61,38.85h0c-5.15,17.62-7.08,38.58,4.11,54.59-15.78-.09-37.51-3.93-43.7-20.4-4.14-17.3,16.12-29.21,30.77-32.61.6-2.33,1.29-4.73,2.11-7C-25.65,55.51-6.93,122.31,57.21,122.6c58.67,1.72,84.05-52.55,74.86-91.92ZM112.31,47.68c-1.41,13.28-11.89,47.54-33.33,51.77-2.59.51-5.27.41-7.78-.4-17.94-5.83-18.06-35.94-12.19-51.02,29.97-.12,40.99,16.13,40.99,16.13,1.35-3.59,2.44-7.34,3.24-11.18-16.52-12.08-41.66-11.28-41.66-11.28C76.94,7.26,117.59.11,112.31,47.68Z"/>
+    </svg>
+    <div class="divider"></div>
+    <h1>CATALYST<span class="dot">.</span></h1>
+    <div class="divider"></div>
+    <!-- Catalyst app icon (128×128 PNG, rendered HD) -->
+    <img class="catalyst-logo" src="icon128.png" alt="Catalyst" width="128" height="128" decoding="async">
+  </div>
+  <div class="sub">TrendLife · A Trend Micro Pitch</div>
+  <button class="play-btn" id="play-btn">▶  PLAY PITCH</button>
+  <div class="hint">Click anywhere to pause · ⇦ ⇨ to skip · R to restart</div>
+</div>
+
+<div class="section-label" id="section-label"></div>
+<div class="stage" id="stage"></div>
+
+<div class="hud">
+  <span class="counter-text" id="counter-text">— / —</span>
+  <div class="beat-dots" id="beat-dots"></div>
+  <div class="controls">
+    <button id="prev-btn">⇦ PREV</button>
+    <button id="next-btn">NEXT ⇨</button>
+    <button id="voice-toggle" class="active">🔊 VOICE</button>
+    <button id="bgm-toggle" class="active">🎵 MUSIC</button>
+    <button id="vocals-toggle">🎤 VOCALS ON</button>
+    <button id="restart-btn">↻ RESTART</button>
+  </div>
+</div>
+
+<div class="done-overlay" id="done">
+  <div style="font-size:2rem;letter-spacing:-.02em;text-align:center">
+    Turning every serial into an opportunity.
+  </div>
+  <button class="replay-btn" id="replay-btn">▶  Replay</button>
+</div>
+
+<script>
+// ── SVG helpers ──────────────────────────────────────────────────────────────
+const PHONE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z"/></svg>';
+
+// ── Pitch script: each beat has TEXT (spoken) + HTML (visuals) ───────────────
+const sections = [
+  { title: "OPENING", beats: [
+      { anim: "fade-up", text: "Every day, a Trend Micro engineer picks up the phone.",
+        html: `<div class="stack">
+          <div class="phone-pulse">${PHONE_SVG}</div>
+          <p class="text-lg mt-md">Every day, a Trend Micro engineer picks up the <span class="accent">phone</span>.</p>
+        </div>` },
+      { anim: "slide-right", text: "A customer on the other end — frustrated, maybe anxious — reads out a serial number.",
+        html: `<div class="stack">
+          <p class="text-sm muted">— On the call —</p>
+          <div class="serial-display">XXXX-1234-5678-8765-4321<span class="cursor"></span></div>
+          <p class="text-md mt-md">A customer on the other end — frustrated, maybe anxious — reads out a <span class="accent">serial number</span>.</p>
+        </div>` },
+      { anim: "zoom-in", text: "And in that exact moment, there is a window.",
+        html: `<p class="text-mega">There&rsquo;s a <span class="accent">window</span>.</p>` },
+      { anim: "punch", text: "Five seconds. Maybe ten. That is how long the engineer has before the moment is gone.",
+        html: `<div class="stack">
+          <p class="text-mega"><span class="accent">5–10</span></p>
+          <p class="text-md muted">seconds before the moment is gone</p>
+        </div>` },
+      { anim: "slide-up", text: "A window to help them. And a window to grow revenue.",
+        html: `<div class="row gap-lg">
+          <div class="card tinted" style="width: 16rem; text-align:center"><div class="label">A window to</div><div class="value" style="color:#fff">Help.</div></div>
+          <div class="card glow" style="width: 16rem; text-align:center"><div class="label">A window to</div><div class="value accent">Grow Revenue.</div></div>
+        </div>` },
+      { anim: "fade-up", text: "Most of the time? That window closes before anyone even knew it was open.",
+        html: `<div class="stack">
+          <p class="text-lg">Most of the time?</p>
+          <p class="text-xl">That window <span class="accent">closes</span> before anyone even knew it was open.</p>
+        </div>` },
+  ]},
+  { title: "THE PROBLEM", beats: [
+      { anim: "slide-up", text: "Here's what that moment actually looks like for our engineers on Premium Phones Support.",
+        html: `<div class="stack">
+          <div class="people">
+            <div class="av red">A</div><div class="av">M</div><div class="av">M</div>
+          </div>
+          <p class="text-md mt-md">Here&rsquo;s what that moment actually looks like<br>for our engineers on <span class="accent">Premium Phones Support</span>.</p>
+        </div>` },
+      { anim: "slide-left", text: "The customer gives their serial. The engineer opens Customer360. Manually looks up the license. Tries to recall the right renewal product. Tries to remember the current promo price.",
+        html: `<div class="stack">
+          <p class="text-sm muted">The customer gives their serial. Then…</p>
+          <div class="flow">
+            <span class="step">Open Customer360</span><span class="arrow">→</span>
+            <span class="step">Manually look up license</span><span class="arrow">→</span>
+            <span class="step">Recall renewal product</span><span class="arrow">→</span>
+            <span class="step">Remember promo price</span>
+          </div>
+        </div>` },
+      { anim: "zoom-in", text: "All of this — live. On a call. While the customer is waiting.",
+        html: `<div class="stack">
+          <p class="text-xl">All of this — <span class="accent">live</span>.</p>
+          <p class="text-md muted">On a call. While the customer is waiting.</p>
+        </div>` },
+      { anim: "punch", text: "Offers get missed. Prices get quoted wrong. The moment passes.",
+        html: `<div class="miss-grid">
+          <div class="miss"><div class="x">✕</div><div class="lbl">Offers missed</div></div>
+          <div class="miss"><div class="x">✕</div><div class="lbl">Prices quoted wrong</div></div>
+          <div class="miss"><div class="x">✕</div><div class="lbl">Moment passes</div></div>
+        </div>` },
+      { anim: "fade-up", text: "Three engineers. Hundreds of calls a week. The window opens, and closes, hundreds of times — and most of the time, no offer goes out.",
+        html: `<div class="stack">
+          <div class="people">
+            <div class="av red">A</div><div class="av red">M</div><div class="av red">M</div>
+          </div>
+          <p class="text-lg mt-md">3 engineers · <span class="accent">hundreds</span> of calls a week</p>
+          <p class="text-sm muted">The window opens — and closes — hundreds of times.<br>Most of the time, no offer goes out.</p>
+        </div>` },
+      { anim: "zoom-in", text: "The baseline tells the story — eight hundred ninety-seven dollars a week in support revenue, median across our three engineers. Wildly inconsistent.",
+        html: `<div class="stack">
+          <p class="text-xs">Baseline · Median support revenue / week</p>
+          <p class="counter" id="cnt-897" data-from="0" data-to="897" data-prefix="$">$0</p>
+          <div class="bars mt-md" aria-hidden="true">
+            <div class="bar" style="height: 30%"></div>
+            <div class="bar" style="height: 78%"></div>
+            <div class="bar" style="height: 14%"></div>
+            <div class="bar" style="height: 92%"></div>
+            <div class="bar" style="height: 24%"></div>
+            <div class="bar" style="height: 60%"></div>
+            <div class="bar" style="height: 10%"></div>
+            <div class="bar" style="height: 70%"></div>
+            <div class="bar" style="height: 35%"></div>
+          </div>
+          <p class="text-sm muted mt-md">Wildly inconsistent. Opportunity left on the table.</p>
+        </div>` },
+  ]},
+  { title: "THE SOLUTION", beats: [
+      { anim: "zoom-in", text: "We built Catalyst — a zero-install co-pilot that lives right in the Edge side panel, alongside 8x8 and Customer360.",
+        html: `<div class="stack">
+          <p class="text-xs">Introducing</p>
+          <p class="text-mega"><span class="accent">CATALYST</span></p>
+          <div class="row mt-md">
+            <span class="pill"><span class="dot"></span>Zero install</span>
+            <span class="pill red"><span class="dot"></span>Edge side panel</span>
+            <span class="pill"><span class="dot"></span>8x8 + Customer360</span>
+          </div>
+        </div>` },
+      { anim: "slide-left", text: "The moment a serial is mentioned on a call — even spelled out in NATO phonetics across a noisy line — Catalyst catches it, cleans it up, and decodes the product instantly.",
+        html: `<div class="decode">
+          <div class="box"><div class="l">Heard on call</div><div class="v">"X-ray Alpha Sierra…"</div></div>
+          <span class="arrow">→</span>
+          <div class="box"><div class="l">Cleaned</div><div class="v">XAS-9837-A4C2</div></div>
+          <span class="arrow">→</span>
+          <div class="box product"><div class="l">Product</div><div class="v">TM Maximum Security 12mo</div></div>
+        </div>` },
+      { anim: "slide-up", text: "It auto-submits the Customer360 search, reads the entitlement, and flags what's expiring.",
+        html: `<div class="check-grid">
+          <div class="check">Auto-submit Customer360</div>
+          <div class="check">Read entitlement</div>
+          <div class="check">Flag what&rsquo;s expiring</div>
+        </div>` },
+      { anim: "zoom-in", text: "It opens the renewal page in the background, scrapes the live pricing, and surfaces the right offer — with the actual price, cashback, and any active coupons.",
+        html: `<div class="offer-card">
+          <div class="hdr"><div class="product">TM Maximum Security · 3 devices · 12 mo</div><div class="badge">RECOMMENDED</div></div>
+          <div class="price">$59.95<span class="old">$89.95</span></div>
+          <div class="meta">
+            <span class="pill red"><span class="dot"></span>20% cashback</span>
+            <span class="pill"><span class="dot"></span>Coupon SAVE30 active</span>
+            <span class="pill good"><span class="dot"></span>Live pricing</span>
+          </div>
+        </div>` },
+      { anim: "slide-up", text: "Built on Claude. Running in the Edge side panel. No install, no IT ticket — it just opens with the call.",
+        html: `<div class="stack">
+          <div class="row gap-lg">
+            <span class="pill"><span class="dot"></span>Built on Claude</span>
+            <span class="pill red"><span class="dot"></span>Edge side panel</span>
+            <span class="pill good"><span class="dot"></span>No install · No IT ticket</span>
+          </div>
+          <p class="text-md mt-md">It just opens with the call.</p>
+        </div>` },
+      { anim: "zoom-out", text: "And it knows when to speak up. Offer Radar watches the conversation, and only signals the engineer to pitch once the technical issue is resolved and the customer's sentiment is positive.",
+        html: `<div class="stack">
+          <p class="text-xs">Offer Radar</p>
+          <div class="radar"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="core"></div></div>
+          <div class="row mt-md">
+            <span class="pill good"><span class="dot"></span>Issue resolved</span>
+            <span class="sentiment"><span class="face">😊</span>Sentiment positive</span>
+            <span class="pill red"><span class="dot"></span>Signal: pitch now</span>
+          </div>
+          <p class="text-sm muted mt-md">No guesswork. No fumbling. No missed windows.</p>
+        </div>` },
+  ]},
+  { title: "THE IMPACT", beats: [
+      { anim: "fade-up", text: "We ran Catalyst live for one week — real calls, real customers, real revenue.",
+        html: `<div class="stack">
+          <div class="row">
+            <span class="pill good"><span class="dot"></span>1 week live</span>
+            <span class="pill"><span class="dot"></span>Real calls</span>
+            <span class="pill"><span class="dot"></span>Real customers</span>
+            <span class="pill red"><span class="dot"></span>Real revenue</span>
+          </div>
+          <p class="text-xl mt-md">One week. <span class="accent">Real results.</span></p>
+        </div>` },
+      { anim: "slide-right", text: "Support revenue went from a median eight hundred ninety-seven dollars a week, to twelve hundred.",
+        html: `<div class="row gap-lg" style="align-items:baseline">
+          <div class="stack" style="text-align:center">
+            <p class="text-xs">Before</p>
+            <p class="text-xl strike">$897</p>
+            <p class="text-xs muted">median / week</p>
+          </div>
+          <span class="text-xl accent">→</span>
+          <div class="stack" style="text-align:center">
+            <p class="text-xs accent">After Catalyst</p>
+            <p class="counter accent" id="cnt-1200" data-from="897" data-to="1200" data-prefix="$">$897</p>
+            <p class="text-xs muted">median / week</p>
+          </div>
+        </div>` },
+      { anim: "fade-up", text: "Same engineers. Same calls. Same customers. The only thing that changed — was the moment of the offer.",
+        html: `<div class="stack">
+          <div class="check-grid">
+            <div class="check">Same engineers</div>
+            <div class="check">Same calls</div>
+            <div class="check">Same customers</div>
+          </div>
+          <p class="text-xl mt-md">The only thing that changed — was the <span class="accent">moment of the offer</span>.</p>
+        </div>` },
+      { anim: "punch", text: "That's plus thirty-three point eight percent — clearing our twenty percent target in the very first week.",
+        html: `<div class="stack">
+          <p class="counter accent" id="cnt-338" data-from="0" data-to="33.8" data-suffix="%" data-decimals="1">0%</p>
+          <p class="text-sm muted">Revenue uplift</p>
+          <div class="target-bar"><div class="fill" id="bar-fill"></div><div class="target"></div></div>
+          <p class="text-sm mt-md">Cleared the <span class="accent">20% target</span> — week one.</p>
+        </div>` },
+      { anim: "slide-up", text: "Premium orders up eleven percent. Projected annually, that's over fifteen thousand dollars in incremental revenue — from three engineers, no new headcount, no new tools budget.",
+        html: `<div class="cols c2 gap-lg" style="max-width: 800px; margin: 0 auto">
+          <div class="card glow" style="text-align:center">
+            <div class="label">Premium Orders</div>
+            <div class="value accent" id="cnt-11" data-from="0" data-to="11" data-prefix="+" data-suffix="%">+0%</div>
+            <div class="meta">Quarter-over-quarter</div>
+          </div>
+          <div class="card glow" style="text-align:center">
+            <div class="label">Projected Annual Incremental</div>
+            <div class="value accent" id="cnt-15k" data-from="0" data-to="15000" data-prefix="$" data-suffix="+">$0+</div>
+            <div class="meta">3 engineers · no new headcount · no tools budget</div>
+          </div>
+        </div>` },
+  ]},
+  { title: "CLOSE", beats: [
+      { anim: "fade-up", text: "Catalyst doesn't replace the engineer.",
+        html: `<div class="stack">
+          <div class="row gap-lg" style="align-items:center">
+            <div class="people"><div class="av red">E</div></div>
+            <span class="text-xl">+</span>
+            <div class="radar" style="width:4rem;height:4rem"><div class="ring"></div><div class="ring"></div><div class="core" style="width:1rem;height:1rem"></div></div>
+          </div>
+          <p class="text-xl mt-md">Catalyst doesn&rsquo;t <span class="accent">replace</span> the engineer.</p>
+        </div>` },
+      { anim: "slide-down", text: "Catalyst is the difference between, 'we'll send you the details,' and, 'I can renew you right now, at this price.'",
+        html: `<div class="stack" style="text-align:center">
+          <div class="card" style="max-width:520px; margin:0 auto; border-color:#3a2020"><div class="label">Before</div><div class="value strike" style="font-size:1.3rem">"We'll send you the details."</div></div>
+          <div style="font-size:2rem; color:var(--red); margin:.5rem 0">↓</div>
+          <div class="card glow" style="max-width:520px; margin:0 auto"><div class="label accent">With Catalyst</div><div class="value" style="font-size:1.3rem; color:#fff">"I can renew you right now, at this price."</div></div>
+        </div>` },
+      { anim: "slide-up", text: "It just makes sure that when the serial is read out, the right offer is already there — at the right moment, at the right price.",
+        html: `<div class="check-grid">
+          <div class="check">Right offer</div>
+          <div class="check">Right moment</div>
+          <div class="check">Right price</div>
+        </div>` },
+      { anim: "zoom-in", text: "That's Catalyst. Turning every serial into an opportunity.",
+        html: `<div class="stack">
+          <p class="logo-mark">CATALYST<span class="dot">.</span></p>
+          <p class="text-sm muted mt-md" style="letter-spacing:.15em">Turning every serial into an opportunity.</p>
+        </div>` },
+  ]},
+  { title: "DEMO", beats: [
+      { anim: "fade-up", isVideo: true, text: "",
+        html: `<div class="video-stage">
+          <video id="end-demo" src="TrendLife C2 demo01.mov" autoplay playsinline controls preload="auto"></video>
+        </div>
+        <div class="video-caption">Catalyst — Live Demo</div>` },
+  ]},
+];
+
+// ── Build flat beat array
+const timeline = [];
+sections.forEach(sec => sec.beats.forEach(b => timeline.push({ ...b, sectionTitle: sec.title })));
+
+// ── DOM
+const stage          = document.getElementById('stage');
+const sectionLabel   = document.getElementById('section-label');
+const startOverlay   = document.getElementById('start');
+const playBtn        = document.getElementById('play-btn');
+const voiceToggle    = document.getElementById('voice-toggle');
+const restartBtn     = document.getElementById('restart-btn');
+const prevBtn        = document.getElementById('prev-btn');
+const nextBtn        = document.getElementById('next-btn');
+const doneOverlay    = document.getElementById('done');
+const replayBtn      = document.getElementById('replay-btn');
+const beatDots       = document.getElementById('beat-dots');
+const counterText    = document.getElementById('counter-text');
+
+// ── Build dots
+timeline.forEach((_, i) => {
+  const d = document.createElement('span');
+  d.className = 'dot';
+  d.dataset.i = i;
+  d.addEventListener('click', e => { e.stopPropagation(); jumpTo(i); });
+  beatDots.appendChild(d);
+});
+function updateDots() {
+  beatDots.querySelectorAll('.dot').forEach((d, i) => {
+    d.classList.toggle('done', i < currentIdx);
+    d.classList.toggle('active', i === currentIdx);
+  });
+  counterText.textContent = `${currentIdx + 1} / ${timeline.length}`;
+}
+
+// ── State
+let playing = false;
+let currentIdx = -1;
+let voiceOn = true;
+let synth = window.speechSynthesis;
+let voice = null;
+let currentUtter = null;
+let beatTimer = null;
+let fallbackTimer = null;
+
+// ── Background music with Web Audio (ducking + vocal removal) ────────
+const BGM_BASE = 0.35;   // 35% — clearly audible between narration beats
+const BGM_DUCK = 0.15;   // 15% — audible during narration but doesn't drown the voice
+const bgm = document.getElementById('bgm');
+bgm.volume = 1.0;         // gain is controlled via Web Audio masterGain
+// Note: no crossOrigin attribute — when loading via file:// it can cause CORS issues
+
+let audioCtx = null;
+let audioSource = null;
+let masterGain = null;
+let directGain = null;     // normal stereo path
+let karaokeGain = null;    // (L - R) mono path = vocal-removed
+// Default OFF — many compressed sources are near-mono, so karaoke trick can produce silence.
+// User can toggle ON via the 🎤 button.
+let vocalRemovalOn = false;
+
+function ensureAudioGraph() {
+  if (audioCtx) return;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audioSource = audioCtx.createMediaElementSource(bgm);
+
+    masterGain  = audioCtx.createGain();
+    masterGain.gain.value = BGM_BASE;
+
+    // Direct (stereo) path
+    directGain  = audioCtx.createGain();
+    directGain.gain.value  = vocalRemovalOn ? 0 : 1;
+    audioSource.connect(directGain).connect(masterGain);
+
+    // Vocal-removed (L - R mono) path:
+    //   splitter → L → monoMix
+    //              R → inverter(-1) → monoMix
+    //   monoMix duplicated to both channels via merger
+    const splitter = audioCtx.createChannelSplitter(2);
+    const inverter = audioCtx.createGain();
+    inverter.gain.value = -1;
+    const monoMix  = audioCtx.createGain();
+    const merger   = audioCtx.createChannelMerger(2);
+    karaokeGain = audioCtx.createGain();
+    karaokeGain.gain.value = vocalRemovalOn ? 1 : 0;
+
+    audioSource.connect(splitter);
+    splitter.connect(monoMix, 0);      // L → mix
+    splitter.connect(inverter, 1);     // R → inverter
+    inverter.connect(monoMix);         // -R → mix  (so mix = L - R)
+    monoMix.connect(merger, 0, 0);     // mono → output L
+    monoMix.connect(merger, 0, 1);     // mono → output R
+    merger.connect(karaokeGain).connect(masterGain);
+
+    masterGain.connect(audioCtx.destination);
+  } catch (e) {
+    console.warn('Audio graph setup failed:', e);
+  }
+}
+
+function bgmPlay() {
+  if (!bgm) return;
+  ensureAudioGraph();
+  // Always force-resume the AudioContext — many browsers leave it suspended
+  // even after user gesture until you explicitly resume it.
+  if (audioCtx) {
+    audioCtx.resume().then(() => {
+      console.log('AudioContext state after resume:', audioCtx.state);
+    }).catch(err => console.warn('AudioContext resume failed:', err));
+  }
+  const p = bgm.play();
+  if (p && p.catch) {
+    p.catch(err => {
+      console.warn('BGM play blocked, retrying after short delay:', err);
+      // Retry once after AudioContext is fully resumed
+      setTimeout(() => bgm.play().catch(e => console.error('BGM retry failed:', e)), 200);
+    });
+  }
+}
+function bgmPause() {
+  if (bgm) bgm.pause();
+}
+
+function rampGain(gainNode, target, durSec) {
+  if (!audioCtx || !gainNode) return;
+  const now = audioCtx.currentTime;
+  gainNode.gain.cancelScheduledValues(now);
+  gainNode.gain.setValueAtTime(gainNode.gain.value, now);
+  gainNode.gain.linearRampToValueAtTime(target, now + durSec);
+}
+
+function bgmDuck()   { rampGain(masterGain, BGM_DUCK, 0.35); }  // when AI speaks
+function bgmUnduck() { rampGain(masterGain, BGM_BASE, 0.55); }  // when AI pauses
+
+function bgmFadeOut(durationMs = 1500) {
+  if (audioCtx && masterGain) {
+    rampGain(masterGain, 0, durationMs / 1000);
+    setTimeout(() => { try { bgm.pause(); } catch(e){}; rampGain(masterGain, BGM_BASE, 0.001); }, durationMs + 50);
+  } else if (bgm) {
+    // Fallback if Web Audio didn't initialize
+    const startVol = bgm.volume;
+    const t0 = performance.now();
+    function step(now) {
+      const t = Math.min(1, (now - t0) / durationMs);
+      bgm.volume = startVol * (1 - t);
+      if (t < 1) requestAnimationFrame(step);
+      else { bgm.pause(); bgm.volume = 1; }
+    }
+    requestAnimationFrame(step);
+  }
+}
+
+function bgmReset() {
+  if (!bgm) return;
+  bgm.pause();
+  bgm.currentTime = 0;
+  if (masterGain) masterGain.gain.value = BGM_BASE;
+}
+
+function setVocalRemoval(on) {
+  vocalRemovalOn = on;
+  if (!audioCtx) return;
+  rampGain(directGain,  on ? 0 : 1, 0.3);
+  rampGain(karaokeGain, on ? 1 : 0, 0.3);
+}
+
+function pickVoice() {
+  if (!synth) return;
+  const voices = synth.getVoices();
+  // Prefer engaging adult male voices (Edge neural voices first, then standard)
+  voice = voices.find(v => /Microsoft (Guy|Davis) Online \(Natural\)/i.test(v.name))
+       || voices.find(v => /Microsoft (Tony|Eric|Brandon|Christopher) Online \(Natural\)/i.test(v.name))
+       || voices.find(v => /Microsoft (Guy|Davis|Tony|Eric|Brandon|Christopher)/i.test(v.name) && /en/i.test(v.lang))
+       || voices.find(v => /Microsoft (David|Mark)/i.test(v.name) && /en/i.test(v.lang))
+       || voices.find(v => /Google US English.*Male/i.test(v.name))
+       || voices.find(v => /^(Daniel|Alex|Fred|Tom|Aaron|Albert|Bruce|Diego)/i.test(v.name) && /en/i.test(v.lang))
+       || voices.find(v => /male/i.test(v.name) && /en/i.test(v.lang))
+       || voices.find(v => /en-US/i.test(v.lang))
+       || voices.find(v => /^en/i.test(v.lang))
+       || voices[0];
+  if (voice) console.log('Catalyst pitch — voice:', voice.name);
+}
+if (synth) {
+  synth.onvoiceschanged = pickVoice;
+  pickVoice();
+}
+
+function clearTimers() {
+  if (beatTimer)     { clearTimeout(beatTimer);     beatTimer = null; }
+  if (fallbackTimer) { clearTimeout(fallbackTimer); fallbackTimer = null; }
+}
+
+function cancelSpeech() {
+  try { synth && synth.cancel(); } catch(e) {}
+  currentUtter = null;
+}
+
+// ── Counter animation (count-up on entry)
+function runCounters(el) {
+  el.querySelectorAll('[data-from][data-to]').forEach(node => {
+    const from = parseFloat(node.dataset.from);
+    const to   = parseFloat(node.dataset.to);
+    const dec  = parseInt(node.dataset.decimals || '0');
+    const pre  = node.dataset.prefix || '';
+    const suf  = node.dataset.suffix || '';
+    const dur  = 1400;
+    const start = performance.now();
+    function step(now) {
+      const t = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - t, 3);
+      const v = from + (to - from) * eased;
+      const formatted = dec ? v.toFixed(dec) :
+                        (to >= 1000 ? Math.round(v).toLocaleString() : Math.round(v).toString());
+      node.textContent = pre + formatted + suf;
+      if (t < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  });
+}
+function runProgressBar(el) {
+  const bar = el.querySelector('#bar-fill');
+  if (bar) requestAnimationFrame(() => { bar.style.width = '33.8%'; });
+}
+
+// ── Render
+function renderBeat(beat) {
+  // Clean up ALL existing beats, not just the first (rapid PREV/NEXT can stack them).
+  // - Beats already mid-exit  → hard-remove immediately (no pile-up)
+  // - Currently active beat   → transition out normally, then remove
+  // - Beats that never went active (very rapid clicks) → hard-remove immediately
+  const existing = stage.querySelectorAll('.beat');
+  existing.forEach(el => {
+    if (el.classList.contains('exiting')) {
+      el.remove();
+    } else if (el.classList.contains('active')) {
+      el.classList.remove('active');
+      el.classList.add('exiting');
+      // Cancel any prior removal timer attached, then schedule fresh one
+      if (el._removeTimer) clearTimeout(el._removeTimer);
+      el._removeTimer = setTimeout(() => { if (el.parentNode) el.remove(); }, 450);
+    } else {
+      el.remove();
+    }
+  });
+
+  const el = document.createElement('div');
+  const animClass = `anim-${beat.anim || 'fade-up'}`;
+  el.className = `beat ${animClass}`;
+  el.innerHTML = beat.html;
+  stage.appendChild(el);
+  // Force reflow so initial transform/opacity is applied before we add .active
+  void el.offsetWidth;
+  requestAnimationFrame(() => {
+    el.classList.add('active');
+    runCounters(el);
+    runProgressBar(el);
+  });
+  sectionLabel.textContent = beat.sectionTitle;
+  sectionLabel.classList.add('active');
+}
+
+// ── Play one beat, advance when speech ends (or after fallback)
+function playBeat(idx) {
+  if (!playing) return;
+  clearTimers();
+  cancelSpeech();
+  if (idx < 0) idx = 0;
+  if (idx >= timeline.length) { finish(); return; }
+  currentIdx = idx;
+  updateDots();
+  const beat = timeline[idx];
+  renderBeat(beat);
+
+  // Estimated read time as fallback (words × 380ms + 1.5s pad)
+  const words = (beat.text || '').split(/\s+/).filter(Boolean).length;
+  const estimateMs = Math.max(3500, words * 380 + 1500);
+
+  const advance = () => {
+    if (!playing || currentIdx !== idx) return;
+    clearTimers();
+    beatTimer = setTimeout(() => { if (playing) playBeat(idx + 1); }, 600);
+  };
+
+  // ── Video beat: fade BGM, autoplay video full-screen, advance on 'ended' ──
+  if (beat.isVideo) {
+    bgmFadeOut(1000);
+    cancelSpeech();
+    setTimeout(() => {
+      const vid = stage.querySelector('video');
+      if (!vid) { advance(); return; }
+      vid.volume = 1.0;
+      vid.muted = false;
+      vid.onended = () => {
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        }
+        if (playing && currentIdx === idx) finish();
+      };
+      vid.onerror = () => {
+        console.warn('Video failed to load — advancing.');
+        if (playing && currentIdx === idx) finish();
+      };
+      // Autoplay (user already clicked PLAY PITCH so gesture is recorded)
+      const playPromise = vid.play();
+      if (playPromise && playPromise.catch) {
+        playPromise.catch(err => {
+          console.warn('Video autoplay blocked, falling back to muted:', err);
+          vid.muted = true;
+          vid.play().catch(e => console.warn('Even muted autoplay blocked:', e));
+        });
+      }
+      // Request full-screen on the video element
+      const reqFull = vid.requestFullscreen
+                   || vid.webkitRequestFullscreen
+                   || vid.mozRequestFullScreen
+                   || vid.msRequestFullscreen;
+      if (reqFull) {
+        try {
+          const p = reqFull.call(vid);
+          if (p && p.catch) p.catch(err => console.warn('Fullscreen blocked:', err));
+        } catch (e) {
+          console.warn('Fullscreen request threw:', e);
+        }
+      }
+      // Safety ceiling
+      fallbackTimer = setTimeout(() => {
+        if (playing && currentIdx === idx) finish();
+      }, 5 * 60 * 1000);
+    }, 300);
+    return;
+  }
+
+  if (voiceOn && synth) {
+    const utter = new SpeechSynthesisUtterance(beat.text);
+    if (voice) utter.voice = voice;
+    utter.rate = 1.05;
+    utter.pitch = 0.95;
+    utter.volume = 1.0;
+    utter.onstart = () => bgmDuck();
+    utter.onend   = () => { bgmUnduck(); advance(); };
+    utter.onerror = () => { bgmUnduck(); advance(); };
+    currentUtter = utter;
+    try { synth.speak(utter); } catch(e) { advance(); }
+    // Duck immediately too, in case onstart never fires on some browsers
+    bgmDuck();
+    // Safety net: if onend never fires (rare browser quirk)
+    fallbackTimer = setTimeout(() => { bgmUnduck(); advance(); }, estimateMs + 8000);
+  } else {
+    // Voice off — pace by estimated read time
+    beatTimer = setTimeout(() => { if (playing) playBeat(idx + 1); }, estimateMs);
+  }
+}
+
+// ── Controls
+function play() {
+  if (playing) return;
+  playing = true;
+  startOverlay.classList.add('hidden');
+  doneOverlay.classList.remove('visible');
+  bgmPlay();
+  playBeat(currentIdx < 0 ? 0 : currentIdx);
+}
+function pause() {
+  if (!playing) return;
+  playing = false;
+  clearTimers();
+  cancelSpeech();
+  bgmPause();
+  // Also pause end-demo video if it's playing
+  const vid = stage.querySelector('video');
+  if (vid && !vid.paused) vid.pause();
+}
+function next() {
+  clearTimers(); cancelSpeech();
+  if (currentIdx + 1 >= timeline.length) { finish(); return; }
+  if (!playing) { playing = true; bgmPlay(); }
+  playBeat(currentIdx + 1);
+}
+function prev() {
+  clearTimers(); cancelSpeech();
+  if (!playing) { playing = true; bgmPlay(); }
+  playBeat(Math.max(0, currentIdx - 1));
+}
+function jumpTo(i) {
+  clearTimers(); cancelSpeech();
+  if (!playing) { playing = true; bgmPlay(); }
+  startOverlay.classList.add('hidden');
+  playBeat(i);
+}
+function restart() {
+  clearTimers(); cancelSpeech();
+  bgmReset();
+  currentIdx = -1;
+  playing = false;
+  const old = stage.querySelector('.beat');
+  if (old) old.remove();
+  sectionLabel.classList.remove('active');
+  doneOverlay.classList.remove('visible');
+  beatDots.querySelectorAll('.dot').forEach(d => d.classList.remove('done', 'active'));
+  counterText.textContent = `— / ${timeline.length}`;
+  play();
+}
+function finish() {
+  playing = false;
+  clearTimers();
+  cancelSpeech();
+  bgmFadeOut(800);
+  doneOverlay.classList.add('visible');
+}
+
+// ── Wire up
+playBtn   .addEventListener('click', e => { e.stopPropagation(); play(); });
+replayBtn .addEventListener('click', e => { e.stopPropagation(); restart(); });
+restartBtn.addEventListener('click', e => { e.stopPropagation(); restart(); });
+prevBtn   .addEventListener('click', e => { e.stopPropagation(); prev(); });
+nextBtn   .addEventListener('click', e => { e.stopPropagation(); next(); });
+voiceToggle.addEventListener('click', e => {
+  e.stopPropagation();
+  voiceOn = !voiceOn;
+  voiceToggle.classList.toggle('active', voiceOn);
+  voiceToggle.textContent = voiceOn ? '🔊 VOICE' : '🔇 MUTED';
+  if (!voiceOn) cancelSpeech();
+});
+
+// BGM mute toggle
+const bgmToggle = document.getElementById('bgm-toggle');
+bgmToggle.addEventListener('click', e => {
+  e.stopPropagation();
+  const newMuted = !bgm.muted;
+  bgm.muted = newMuted;
+  bgmToggle.classList.toggle('active', !newMuted);
+  bgmToggle.textContent = newMuted ? '🔇 MUSIC' : '🎵 MUSIC';
+});
+
+// Vocal-removal toggle
+const vocalsToggle = document.getElementById('vocals-toggle');
+vocalsToggle.addEventListener('click', e => {
+  e.stopPropagation();
+  setVocalRemoval(!vocalRemovalOn);
+  vocalsToggle.classList.toggle('active', vocalRemovalOn);
+  vocalsToggle.textContent = vocalRemovalOn ? '🎤 NO VOCALS' : '🎤 VOCALS ON';
+});
+document.addEventListener('click', () => {
+  if (startOverlay.classList.contains('hidden')) {
+    if (playing) pause();
+    else play();
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space')                   { e.preventDefault(); playing ? pause() : play(); }
+  if (e.key === 'ArrowRight')               { next(); }
+  if (e.key === 'ArrowLeft')                { prev(); }
+  if (e.key === 'r' || e.key === 'R')       { restart(); }
+  if (e.key === 'm' || e.key === 'M')       { voiceToggle.click(); }
+});
+
+// init counter text
+counterText.textContent = `— / ${timeline.length}`;
+</script>
+</body>
+</html>

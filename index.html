@@ -556,6 +556,7 @@ body::before {
   <div class="beat-dots" id="beat-dots"></div>
   <div class="controls">
     <button id="prev-btn">⇦ PREV</button>
+    <button id="pause-play-btn">⏸ PAUSE</button>
     <button id="next-btn">NEXT ⇨</button>
     <button id="voice-toggle" class="active">🔊 VOICE</button>
     <button id="bgm-toggle" class="active">🎵 MUSIC</button>
@@ -855,126 +856,44 @@ let beatTimer = null;
 let fallbackTimer = null;
 
 // ── Background music with Web Audio (ducking + vocal removal) ────────
-const BGM_BASE = 0.35;   // 35% — clearly audible between narration beats
-const BGM_DUCK = 0.15;   // 15% — audible during narration but doesn't drown the voice
+const BGM_BASE = 0.08;   // 8% — consistent throughout
+const BGM_DUCK = 0.08;   // 8% — same level during voice
 const bgm = document.getElementById('bgm');
-bgm.volume = 1.0;         // gain is controlled via Web Audio masterGain
-// Note: no crossOrigin attribute — when loading via file:// it can cause CORS issues
-
-let audioCtx = null;
-let audioSource = null;
-let masterGain = null;
-let directGain = null;     // normal stereo path
-let karaokeGain = null;    // (L - R) mono path = vocal-removed
-// Default OFF — many compressed sources are near-mono, so karaoke trick can produce silence.
-// User can toggle ON via the 🎤 button.
+bgm.volume = BGM_BASE;
 let vocalRemovalOn = false;
-
-function ensureAudioGraph() {
-  if (audioCtx) return;
-  try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    audioSource = audioCtx.createMediaElementSource(bgm);
-
-    masterGain  = audioCtx.createGain();
-    masterGain.gain.value = BGM_BASE;
-
-    // Direct (stereo) path
-    directGain  = audioCtx.createGain();
-    directGain.gain.value  = vocalRemovalOn ? 0 : 1;
-    audioSource.connect(directGain).connect(masterGain);
-
-    // Vocal-removed (L - R mono) path:
-    //   splitter → L → monoMix
-    //              R → inverter(-1) → monoMix
-    //   monoMix duplicated to both channels via merger
-    const splitter = audioCtx.createChannelSplitter(2);
-    const inverter = audioCtx.createGain();
-    inverter.gain.value = -1;
-    const monoMix  = audioCtx.createGain();
-    const merger   = audioCtx.createChannelMerger(2);
-    karaokeGain = audioCtx.createGain();
-    karaokeGain.gain.value = vocalRemovalOn ? 1 : 0;
-
-    audioSource.connect(splitter);
-    splitter.connect(monoMix, 0);      // L → mix
-    splitter.connect(inverter, 1);     // R → inverter
-    inverter.connect(monoMix);         // -R → mix  (so mix = L - R)
-    monoMix.connect(merger, 0, 0);     // mono → output L
-    monoMix.connect(merger, 0, 1);     // mono → output R
-    merger.connect(karaokeGain).connect(masterGain);
-
-    masterGain.connect(audioCtx.destination);
-  } catch (e) {
-    console.warn('Audio graph setup failed:', e);
-  }
-}
 
 function bgmPlay() {
   if (!bgm) return;
-  ensureAudioGraph();
-  // Always force-resume the AudioContext — many browsers leave it suspended
-  // even after user gesture until you explicitly resume it.
-  if (audioCtx) {
-    audioCtx.resume().then(() => {
-      console.log('AudioContext state after resume:', audioCtx.state);
-    }).catch(err => console.warn('AudioContext resume failed:', err));
-  }
+  bgm.volume = BGM_BASE;
   const p = bgm.play();
   if (p && p.catch) {
     p.catch(err => {
-      console.warn('BGM play blocked, retrying after short delay:', err);
-      // Retry once after AudioContext is fully resumed
+      console.warn('BGM play blocked, retrying:', err);
       setTimeout(() => bgm.play().catch(e => console.error('BGM retry failed:', e)), 200);
     });
   }
 }
-function bgmPause() {
-  if (bgm) bgm.pause();
-}
-
-function rampGain(gainNode, target, durSec) {
-  if (!audioCtx || !gainNode) return;
-  const now = audioCtx.currentTime;
-  gainNode.gain.cancelScheduledValues(now);
-  gainNode.gain.setValueAtTime(gainNode.gain.value, now);
-  gainNode.gain.linearRampToValueAtTime(target, now + durSec);
-}
-
-function bgmDuck()   { rampGain(masterGain, BGM_DUCK, 0.35); }  // when AI speaks
-function bgmUnduck() { rampGain(masterGain, BGM_BASE, 0.55); }  // when AI pauses
-
+function bgmPause() { if (bgm) bgm.pause(); }
+function bgmDuck()   { if (bgm) bgm.volume = BGM_DUCK; }
+function bgmUnduck() { if (bgm) bgm.volume = BGM_BASE; }
 function bgmFadeOut(durationMs = 1500) {
-  if (audioCtx && masterGain) {
-    rampGain(masterGain, 0, durationMs / 1000);
-    setTimeout(() => { try { bgm.pause(); } catch(e){}; rampGain(masterGain, BGM_BASE, 0.001); }, durationMs + 50);
-  } else if (bgm) {
-    // Fallback if Web Audio didn't initialize
-    const startVol = bgm.volume;
-    const t0 = performance.now();
-    function step(now) {
-      const t = Math.min(1, (now - t0) / durationMs);
-      bgm.volume = startVol * (1 - t);
-      if (t < 1) requestAnimationFrame(step);
-      else { bgm.pause(); bgm.volume = 1; }
-    }
-    requestAnimationFrame(step);
-  }
+  if (!bgm) return;
+  const startVol = bgm.volume;
+  const t0 = performance.now();
+  (function step(now) {
+    const t = Math.min(1, (now - t0) / durationMs);
+    bgm.volume = startVol * (1 - t);
+    if (t < 1) requestAnimationFrame(step);
+    else { bgm.pause(); bgm.volume = BGM_BASE; }
+  })(performance.now());
 }
-
 function bgmReset() {
   if (!bgm) return;
   bgm.pause();
   bgm.currentTime = 0;
-  if (masterGain) masterGain.gain.value = BGM_BASE;
+  bgm.volume = BGM_BASE;
 }
-
-function setVocalRemoval(on) {
-  vocalRemovalOn = on;
-  if (!audioCtx) return;
-  rampGain(directGain,  on ? 0 : 1, 0.3);
-  rampGain(karaokeGain, on ? 1 : 0, 0.3);
-}
+function setVocalRemoval(on) { vocalRemovalOn = on; }
 
 function pickVoice() {
   if (!synth) return;
@@ -1164,6 +1083,10 @@ function playBeat(idx) {
 }
 
 // ── Controls
+function syncPausePlayBtn() {
+  const btn = document.getElementById('pause-play-btn');
+  if (btn) btn.textContent = playing ? '⏸ PAUSE' : '▶ PLAY';
+}
 function play() {
   if (playing) return;
   playing = true;
@@ -1171,6 +1094,7 @@ function play() {
   doneOverlay.classList.remove('visible');
   bgmPlay();
   playBeat(currentIdx < 0 ? 0 : currentIdx);
+  syncPausePlayBtn();
 }
 function pause() {
   if (!playing) return;
@@ -1181,6 +1105,7 @@ function pause() {
   // Also pause end-demo video if it's playing
   const vid = stage.querySelector('video');
   if (vid && !vid.paused) vid.pause();
+  syncPausePlayBtn();
 }
 function next() {
   clearTimers(); cancelSpeech();
@@ -1226,6 +1151,12 @@ replayBtn .addEventListener('click', e => { e.stopPropagation(); restart(); });
 restartBtn.addEventListener('click', e => { e.stopPropagation(); restart(); });
 prevBtn   .addEventListener('click', e => { e.stopPropagation(); prev(); });
 nextBtn   .addEventListener('click', e => { e.stopPropagation(); next(); });
+const pausePlayBtn = document.getElementById('pause-play-btn');
+pausePlayBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  if (playing) { pause(); pausePlayBtn.textContent = '▶ PLAY'; }
+  else         { play();  pausePlayBtn.textContent = '⏸ PAUSE'; }
+});
 voiceToggle.addEventListener('click', e => {
   e.stopPropagation();
   voiceOn = !voiceOn;
